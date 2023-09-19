@@ -25,4 +25,7 @@ def draw(predictions, image, image_name):
         os.mkdir('tmp/debug')
     except OSError:
         pass
-    image.save(f"tmp/debug/{image_name}", "JPEG")
+
+    img_format = image_name.split(".")[1]
+    print(img_format)
+    image.save(f"tmp/debug/{image_name}", img_format)

@@ -20,6 +20,7 @@ class CountDetectedObjects:
 
     def __find_valid_predictions(self, image, threshold):
         predictions = self.__object_detector.predict(image)
+        print("img ",image)
         self.__debug_image(image, predictions, "all_predictions.jpg")
         valid_predictions = list(over_threshold(predictions, threshold=threshold))
         self.__debug_image(image, valid_predictions, f"valid_predictions_with_threshold_{threshold}.jpg")
@@ -29,5 +30,11 @@ class CountDetectedObjects:
     def __debug_image(image, predictions, image_name):
         if __debug__ and image is not None:
             image = Image.open(image)
+            img_format = image.format
+            print(img_format)
+            if img_format.lower() == "png":
+                image_name = image_name.split(".")[0]+".png"
+            elif img_format.lower() in ['jpeg','jpg']:
+                image_name = image_name.split(".")[0]+".jpeg"
             draw(predictions, image, image_name)
 

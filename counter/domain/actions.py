@@ -20,7 +20,6 @@ class CountDetectedObjects:
 
     def __find_valid_predictions(self, image, threshold):
         predictions = self.__object_detector.predict(image)
-        print("img ",image)
         self.__debug_image(image, predictions, "all_predictions.jpg")
         valid_predictions = list(over_threshold(predictions, threshold=threshold))
         self.__debug_image(image, valid_predictions, f"valid_predictions_with_threshold_{threshold}.jpg")

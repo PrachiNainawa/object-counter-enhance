@@ -165,28 +165,3 @@ class CountPostgresDBRepo(ObjectCountRepo):
             return result
         except (Exception, Error) as error:
             print("Error fetching data:", error)
-
-
-# Usage example
-if __name__ == "__main__":
-    # Replace these with your actual database credentials
-    dbname = "your_db_name"
-    user = "your_db_user"
-    password = "your_db_password"
-    host = "your_db_host"
-    port = "your_db_port"
-
-    db_handler = DatabaseHandler(dbname, user, password, host, port)
-    db_handler.connect()
-
-    # Example query execution
-    query = "INSERT INTO table_name (column1, column2) VALUES (%s, %s)"
-    params = ('value1', 'value2')
-    db_handler.execute_query(query, params)
-
-    # Example data fetching
-    select_query = "SELECT * FROM table_name"
-    rows = db_handler.fetch_data(select_query)
-    print("Fetched Data:", rows)
-
-    db_handler.disconnect()

@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  tfserving:
+    image: tensorflow/serving:latest
+    container_name: tfserving
+    ports:
+      - "8500:8500"
+      - "8501:8501"
+    volumes:
+      - "${MODEL_PATH}:/models/${MODEL_NAME}"
+    environment:
+      - MODEL_NAME=${MODEL_NAME}
+      - OMP_NUM_THREADS=${NUM_PHYSICAL_CORES}
+      - TENSORFLOW_INTER_OP_PARALLELISM=2
+      - TENSORFLOW_INTRA_OP_PARALLELISM=${NUM_PHYSICAL_CORES}
+
+  test-mongo:
+    image: mongo:6.0
+    container_name: test-mongo
+    ports:
+      - "27017:27017"
+
+  postgres-cont:
+    image: postgres:latest
+    container_name: postgres-cont
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - "5432:5432"

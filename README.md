@@ -26,13 +26,12 @@ conda install -c conda-forge m2w64-make
 ```
 
 
-# give input (needed for windows)
+# give input
 
-open the Makefile and change the num_physical_cores as per your machine
-press ctrl+shift+esc to open task manager, click performance to find the cores
-if you want to use any other model then change the model_name variable and also the VOl variable to speify input path to the saved model (VOL=<host_path>:<docker_path>)
-internally trained model should be in SavedModel format of tf
-model.save('saved_model/model_name')
+To use any internal tf model, change MODEL_NAME variable and MODEL_PATH to speify input path of the SavedModel folder in .env file
+eg: acceptible format - model.save('/path')
+change any other env variable through .env file
+
 
 # run the app
 
@@ -48,7 +47,6 @@ if you don't want to run from scratch you can use below cmds to run particular s
 ```
 mingw32-make download (download the model)
 mingw32-make install (installs the python libraries)
-mingw32-make build (builds the docker images)
 mingw32-make run (runs docker container and flask server)
 mingw32-make test (testing)
 mingw32-make clean (delete docker containers)
@@ -58,6 +56,9 @@ mingw32-make shutdown (stops the container without removing the internal data)
 
 # test in new terminal
 ```
-mingw32-make test 
+mingw32-make test (tests the functionality)
+mingw32-make pep8_test (tests the code quality)
+pytest -k e2e (e2e is a keyword in test filename which will only run that particular test, you can change the keyword as per file)
+pytest --cov counter (gives info about test coverage of the code for each file)
 
 ```

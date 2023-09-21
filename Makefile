@@ -1,37 +1,17 @@
-all: download install clean build run
-model_name := rfcn
-num_physical_cores := 10
-VOL := $(subst /,\,${CURDIR})\tmp\model:/models/$(model_name)
+include .env
+
+all: download install clean run
 
 ifeq ($(OS), Windows_NT)
+export NUM_PHYSICAL_CORES=$(shell powershell -Command "(Get-WmiObject Win32_Processor | Select-Object -ExpandProperty NumberOfCores)")
+
 run:
-	docker start tfserving
-	docker start test-mongo
-	docker start postgres-cont
+	docker-compose up -d
 	python -m counter.entrypoints.webapp
 
 
 install:
 	pip install -r requirements.txt
-
-
-test:
-	curl -F "threshold=0.9" -F "file=@resources/images/boy.jpg" http://127.0.0.1:5000/object-count
-	curl -F "threshold=0.9" -F "file=@resources/images/cat.jpg" http://127.0.0.1:5000/object-count
-	curl -F "threshold=0.9" -F "file=@resources/images/food.jpg" http://127.0.0.1:5000/object-count
-	pytest
-
-
-build:
-	docker container create --name=tfserving -p 8500:8500 -p 8501:8501 -v "$(VOL)" -e MODEL_NAME=$(model_name) -e OMP_NUM_THREADS=$(num_physical_cores) -e TENSORFLOW_INTER_OP_PARALLELISM=2 -e TENSORFLOW_INTRA_OP_PARALLELISM=$(num_physical_cores) tensorflow/serving:latest
-	docker container create --name test-mongo -p 27017:27017 mongo:6.0
-	docker container create -e POSTGRES_USER=myuser -e POSTGRES_PASSWORD=mypassword -e POSTGRES_DB=prod_counter -p 5432:5432 --name postgres-cont postgres:latest
-
-
-clean:
-	docker rm -f test-mongo
-	docker rm -f tfserving
-	docker rm -f postgres-cont
 
 
 download:
@@ -42,46 +22,21 @@ download:
 	mkdir tmp\model\1
 	move tmp\rfcn_resnet101_coco_2018_01_28\saved_model\saved_model.pb tmp\model\1
 	rmdir /s /q "tmp/rfcn_resnet101_coco_2018_01_28"
-	
 
-shutdown:
-	docker stop tfserving
-	docker stop test-mongo
-	docker stop postgres-cont
 
 else
+cores_per_socket=`lscpu | grep "Core(s) per socket" | cut -d':' -f2 | xargs`
+num_sockets=`lscpu | grep "Socket(s)" | cut -d':' -f2 | xargs`
+export NUM_PHYSICAL_CORES=$((cores_per_socket * num_sockets))
 run:
-	
-	docker start tfserving
-	docker start test-mongo
-	docker start postgres-cont
-	python -m counter.entrypoints.webapp
+	docker-compose up -d
+	python3 -m counter.entrypoints.webapp
 
 
 install:
 	python3 -m venv .venv
 	source .venv/bin/activate
 	pip install -r requirements.txt
-
-test:
-	curl -F "threshold=0.9" -F "file=@resources/images/boy.jpg" http://127.0.0.1:5000/object-count
-	curl -F "threshold=0.9" -F "file=@resources/images/cat.jpg" http://127.0.0.1:5000/object-count
-	curl -F "threshold=0.9" -F "file=@resources/images/food.jpg" http://127.0.0.1:5000/object-count
-	pytest
-	
-build:
-	cores_per_socket=`lscpu | grep "Core(s) per socket" | cut -d':' -f2 | xargs`
-	num_sockets=`lscpu | grep "Socket(s)" | cut -d':' -f2 | xargs`
-	num_physical_cores=$((cores_per_socket * num_sockets))
-	docker container create --name=tfserving -p 8500:8500 -p 8501:8501 -v "$(pwd)/tmp/model:/models/$(model_name)" -e MODEL_NAME=$(model_name) -e OMP_NUM_THREADS=$(num_physical_cores) -e TENSORFLOW_INTER_OP_PARALLELISM=2 -e TENSORFLOW_INTRA_OP_PARALLELISM=$(num_physical_cores) tensorflow/serving:latest
-	docker container create --name test-mongo -p 27017:27017 mongo:6.0
-	docker container create -e POSTGRES_USER=myuser -e POSTGRES_PASSWORD=mypassword -e POSTGRES_DB=prod_counter -p 5432:5432 --name postgres-cont postgres:latest
-
-
-clean:
-	docker rm -f test-mongo
-	docker rm -f tfserving
-	docker rm -f postgres-cont
 
 
 download:
@@ -94,9 +49,21 @@ download:
 	rm -rf tmp/rfcn_resnet101_coco_2018_01_28
 
 
-shutdown:
-	docker stop tfserving
-	docker stop test-mongo
-	docker stop postgres-cont
-
 endif
+
+
+test:
+	pytest
+
+
+pep8_test:
+	pytest --flakes
+	pytest --pycodestyle
+
+
+clean:
+	docker-compose down
+
+
+shutdown:
+	docker-compose stop

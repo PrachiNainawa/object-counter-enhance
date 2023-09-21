@@ -27,5 +27,4 @@ def draw(predictions, image, image_name):
         pass
 
     img_format = image_name.split(".")[1]
-    print(img_format)
     image.save(f"tmp/debug/{image_name}", img_format)
